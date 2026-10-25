@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Manager Ucapan & Kehadiran</title>
+<style>
+:root{--bg:#fbf7ea;--card:#fffdf7;--ink:#3b2a2b;--mut:#7a5a5e;--line:#e3d4bc;--ac:#7b2d3a;--ac2:#fff;--gold:#b08a45;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1517;--card:#271d20;--ink:#f1e7e2;--mut:#bfa7a9;--line:#4a3a3d;--ac:#d98a98;--ac2:#2a1519;--gold:#d4b06a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1c1517;--card:#271d20;--ink:#f1e7e2;--mut:#bfa7a9;--line:#4a3a3d;--ac:#d98a98;--ac2:#2a1519;--gold:#d4b06a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:4px 0 2px;color:var(--ac)}.sub{color:var(--mut);font-size:14px;margin:0 0 16px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.box h2{font-size:16px;margin:0 0 8px}.hint{font-size:13px;color:var(--mut);margin:6px 0 0}
+button,.btn{font:inherit;font-size:14.5px;border-radius:999px;border:1px solid var(--ac);background:transparent;color:var(--ac);padding:9px 16px;cursor:pointer;text-decoration:none;display:inline-block}
+.p{background:var(--ac);color:var(--ac2)}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+input[type=text],input[type=search],textarea,select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{min-height:90px}input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,.btn:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.st{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.st div{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;font-size:12.5px;color:var(--mut)}
+.st b{display:block;font-size:24px;color:var(--ac);line-height:1.2}
+.w{border-top:1px solid var(--line);padding:11px 0}.w:first-child{border-top:0}.w b{color:var(--ac)}
+.tag{font-size:11.5px;color:var(--gold);margin-left:6px}.w p{margin:3px 0 0;font-size:14.5px;word-break:break-word}
+.fl{display:flex;gap:8px;margin-bottom:8px}.fl>*{flex:1}
+</style></head><body><main>
+<h1>Manager Ucapan & Kehadiran</h1>
+<p class="sub">Rekap ucapan dan konfirmasi kehadiran dari Web Undangan.</p>
+
+<section class="box"><h2>1. Ambil data dari undangan</h2>
+<p class="hint" style="margin:0 0 8px">Buka undangan sebagai pemilik, lalu di bagian Ucapan tekan <b>Unduh CSV</b>. Muat file itu di sini.</p>
+<div class="row" style="margin-top:0"><a class="btn p" id="live" target="_blank" rel="noopener">Buka data langsung di undangan</a></div>
+<div class="row"><input type="file" id="f" accept=".csv,text/csv,text/plain" aria-label="Pilih file CSV"></div>
+<p class="hint">Atau tempel isi CSV:</p><textarea id="t" aria-label="Tempel CSV"></textarea>
+<div class="row"><button class="p" id="load">Muat data</button><button id="clr">Hapus data di sini</button></div>
+<p class="hint" id="info"></p></section>
+
+<section class="box"><h2>2. Rekap</h2>
+<div class="st"><div><b id="a">0</b>Respon</div><div><b id="b">0</b>Insya Allah hadir</div><div><b id="c">0</b>Total orang hadir</div></div>
+<p class="hint" id="d"></p></section>
+
+<section class="box"><h2>3. Daftar ucapan</h2>
+<div class="fl"><input type="search" id="q" placeholder="Cari nama atau ucapan" aria-label="Cari"><select id="s" aria-label="Filter"><option value="">Semua</option><option value="h">Hadir</option><option value="d">Mendoakan</option></select></div>
+<div id="out"></div>
+<div class="row"><button id="cp">Salin daftar tamu hadir</button></div></section>
+</main>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},K='mgr_v1',rows=[],INV='https://claude.ai/artifact/XkpMbr2hCyT6BYQBBTVf9x';
+$('live').href=INV+'#kelola';
+function ls(v){try{if(v===undefined)return localStorage.getItem(K);localStorage.setItem(K,v)}catch(e){return null}}
+function csv(t){var o=[],r=[],c='',q=false;for(var i=0;i<t.length;i++){var ch=t[i];
+ if(q){if(ch=='"'){if(t[i+1]=='"'){c+='"';i++}else q=false}else c+=ch}
+ else if(ch=='"')q=true;else if(ch==','){r.push(c);c=''}else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&t[i+1]=='\n')i++;r.push(c);c='';if(r.join('')!=='')o.push(r);r=[]}else c+=ch}
+ if(c!==''||r.length){r.push(c);o.push(r)}return o}
+function parse(t){var a=csv(t.replace(/^\uFEFF/,''));if(a.length&&/^nama$/i.test((a[0][0]||'').trim()))a.shift();
+ return a.map(function(r){var cl=function(v){return String(v||'').replace(/^'/,'')};return{n:cl(r[0]),k:/hadir/i.test(r[1]||'')&&!/doa/i.test(r[1]||'')&&!/mendoa/i.test(r[1]||'')?'h':'d',j:parseInt(r[2],10)||0,u:cl(r[3]),w:cl(r[4])}}).filter(function(x){return x.n})}
+function mk(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+function render(){
+ var h=rows.filter(function(x){return x.k==='h'}),org=h.reduce(function(s,x){return s+(x.j||1)},0);
+ $('a').textContent=rows.length;$('b').textContent=h.length;$('c').textContent=org;
+ $('d').textContent=rows.length?(rows.length-h.length)+' tamu memilih mendoakan dari kejauhan.':'Belum ada data dimuat.';
+ var q=$('q').value.trim().toLowerCase(),s=$('s').value,o=$('out');o.textContent='';
+ var list=rows.filter(function(x){return(!s||x.k===s)&&(!q||(x.n+' '+x.u).toLowerCase().indexOf(q)>-1)});
+ if(!list.length){o.appendChild(mk('p','hint',rows.length?'Tidak ada yang cocok.':'Muat data CSV terlebih dahulu.'));return}
+ list.forEach(function(x){var w=mk('div','w'),b=mk('b','',x.n),g=mk('span','tag',x.k==='h'?'Insya Allah hadir ('+(x.j||1)+')':'Mendoakan dari kejauhan');
+  w.appendChild(b);w.appendChild(g);if(x.u)w.appendChild(mk('p','',x.u));o.appendChild(w)})}
+function load(t){var r=parse(t);if(!r.length){$('info').textContent='Data tidak terbaca. Pastikan memakai CSV dari undangan.';return}
+ rows=r;ls(JSON.stringify(rows));$('info').textContent=r.length+' respon dimuat.';render()}
+$('load').onclick=function(){load($('t').value)};
+$('f').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){load(String(rd.result))};rd.readAsText(f)};
+$('clr').onclick=function(){rows=[];ls('[]');$('t').value='';$('info').textContent='Data dihapus dari halaman ini.';render()};
+$('q').oninput=render;$('s').onchange=render;
+$('cp').onclick=function(){var t=rows.filter(function(x){return x.k==='h'}).map(function(x){return x.n+' ('+(x.j||1)+')'}).join('\n');if(!t)return;
+ try{navigator.clipboard.writeText(t).then(function(){$('info').textContent='Daftar tamu hadir disalin.'})}catch(e){}};
+try{rows=JSON.parse(ls()||'[]')||[]}catch(e){rows=[]}
+if(rows.length)$('info').textContent=rows.length+' respon tersimpan di perangkat ini.';
+render();
+})();
+</script></body></html>
